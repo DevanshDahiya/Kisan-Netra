@@ -4,8 +4,8 @@ const rateLimit = require('express-rate-limit');
 
 // for valid or selected  site can hit 
 const corsOptions = {
-    origin: process.env.CLIENT_URL,
-    credentials: true,  // required for httpOnly cookies to be sent
+    origin: process.env.NODE_ENV === 'development' ? '*' : process.env.CLIENT_URL,
+    credentials: process.env.NODE_ENV === 'development' ? false : true,
 };
 
 // General limiter - applied to all /api routes 

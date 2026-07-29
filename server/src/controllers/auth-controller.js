@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const {generateToken , sendTokenCookie} = require('../utils/generateToken');
 const {generateOTP , hashOTP , compareOTP , OTP_EXPIRY_MINUTES  , MAX_OTP_ATTEMPTS} = require('../utils/otp');
-const {sendOTPEmail} = require('../utils/otp') ;
+const {sendOTPEmail} = require('../utils/EmailService') ;
 
 // route - > POST /api/auth/register 
 const register = async(req , res , next) =>{
@@ -10,7 +10,7 @@ const register = async(req , res , next) =>{
         const existingUser = await User.findOne({email}) ;
         if(existingUser){
             return res.status(400).json({
-                message : 'Email already registered' 
+                message : 'Email already registered'  
             });
         }
 
@@ -109,29 +109,30 @@ const verifyOTP = async(req , res , next) => {
             return res.status(400).json({
                 message : 'Invalid or expired OTP.'
             }) ;
+        }
 
-            if(user.resetOTPAttempts >= MAX_OTP_ATTEMPTS){
-                res.status(429).json({
-                    message : 'Too many incorrect attempts. Please request a new OTP',
-                })
-            }
-            if(user.resetPasswordExpires < Date.now()){
-                return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
-            }
-
-            const isMatch = await compareOTP(otp , user.resetPasswordOTP);
-            if(!isMatch){
-                user.resetOTPAttempts++ ; 
-                await user.save() ;
-                return res.status(400).json({
-                    message : 'Incorrect OTP' 
-                });
-            }
-
-            res.status(200).json({
-                message : 'OTP verified. You may now reset your password.' 
+        if(user.resetOTPAttempts >= MAX_OTP_ATTEMPTS){
+            return res.status(429).json({
+                message : 'Too many incorrect attempts. Please request a new OTP',
             });
         }
+
+        if(user.resetPasswordExpires < Date.now()){
+            return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+        }
+
+        const isMatch = await compareOTP(otp , user.resetPasswordOTP);
+        if(!isMatch){
+            user.resetOTPAttempts++ ; 
+            await user.save() ;
+            return res.status(400).json({
+                message : 'Incorrect OTP' 
+            });
+        }
+
+        res.status(200).json({
+            message : 'OTP verified. You may now reset your password.' 
+        });
     }
     catch(err){
         next(err) ; 

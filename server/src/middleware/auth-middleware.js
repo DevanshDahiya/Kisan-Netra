@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const user = require("../models/User");
+const User = require("../models/User");
 
 // Verifies the Jwt(from cookie) and attaches the user to req.user 
 
@@ -12,7 +12,7 @@ const protect = async (req, res, next) => {
             });
         }
 
-        const decoded = jwt.verify(token, process.env.Jwt_secret);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id);
 
         if (!user) {
