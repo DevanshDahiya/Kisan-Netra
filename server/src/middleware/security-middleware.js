@@ -4,8 +4,8 @@ const rateLimit = require('express-rate-limit');
 
 // for valid or selected  site can hit 
 const corsOptions = {
-  origin: process.env.CLIENT_URL,
-  credentials: true,
+    origin: process.env.CLIENT_URL,
+    credentials: true,
 };
 
 // General limiter - applied to all /api routes 
@@ -21,7 +21,7 @@ const generalLimiter = rateLimit({
 // Tighter because these are the endpoints worth brute-forcing or spamming.
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes window 
-    max: 10,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
     message: { mesage: 'Too many attempts , please try again later.' },
