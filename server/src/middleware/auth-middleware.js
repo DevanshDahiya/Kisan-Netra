@@ -31,7 +31,7 @@ const protect = async (req, res, next) => {
 };
 
 
-// it restrict the user with roles like (eg. - 'farmar ','dealer')
+// it restrict the user with roles like (eg. - 'farmar ','dealer') and it is used to differentiate the admin and user
 const authorize = (...allowedRoles) => {
     return (req, res, next) => {
         if (!allowedRoles.includes(req.user.role)) {
