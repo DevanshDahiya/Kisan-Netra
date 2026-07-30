@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const { helmetMiddleware, corsMiddleware, generalLimiter } = require('./middleware/security-middleware');
 const errorHandler = require('./middleware/error-handler');
 const authRoutes = require('./routes/auth-routes');
+const dealerRoutes = require('./routes/dealer-routes');
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/api', generalLimiter);
 // Routes -> 
 // for all the register  , login , reset passwortd , verify-otp 
 app.use('/api/auth', authRoutes);
+app.use('/api/dealers', dealerRoutes);
 
 // health check 
 app.get('/api/health', (req, res) => {
