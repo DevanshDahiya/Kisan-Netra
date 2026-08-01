@@ -11,12 +11,12 @@ const createDealer = async (req, res, next) => {
                 message: 'You already hav ea store profile.'
             });
         }
-        const { storeName, address, licenceNumber, longitude, latitude, contactPhone } = req.body();
+        const { storeName, address, licenseNumber, longitude, latitude, contactPhone } = req.body;
         const dealer = await Dealer.create({
             user: req.user._id,
             storeName,
             address,
-            licenceNumber,
+            licenseNumber,
             location: {
                 type: 'Point',
                 coordinates: [longitude, latitude],
@@ -79,7 +79,7 @@ const updateDealer = async (req, res, next) => {
                 message: "You can only update your own store profile"
             });
         }
-        const { storeName, address, licenceNumber, longitude, latitude, contactPhone } = req.body();
+        const { storeName, address, licenseNumber, longitude, latitude, contactPhone } = req.body;
 
         if (storeName) {
             dealer.storeName = storeName;
@@ -87,8 +87,8 @@ const updateDealer = async (req, res, next) => {
         if (address) {
             dealer.address = address
         }
-        if (licenceNumber) {
-            dealer.licenceNumber = licenceNumber
+        if (licenseNumber) {
+            dealer.licenseNumber = licenseNumber
         }
         if (contactPhone) {
             dealer.contactPhone = contactPhone
