@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import DealerDashboard from './pages/DealerDashboard';
+import FarmerDashboard from "./pages/FarmerDashboard";
 
 function App() {
   return (
@@ -23,6 +24,14 @@ function App() {
             element={
               <ProtectedRoute roles={['dealer']}>
                 <DealerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/farmer/dashboard"
+            element={
+              <ProtectedRoute roles={['farmer']}>
+                <FarmerDashboard />
               </ProtectedRoute>
             }
           />

@@ -1,0 +1,49 @@
+"filename", "language", "Markdown", "JavaScript", "XML", "JavaScript JSX", "CSS", "JSON", "HTML", "comment", "blank", "total"
+"d:\program\kisan-netra\README.md", "Markdown", 1, 0, 0, 0, 0, 0, 0, 0, 2, 3
+"d:\program\kisan-netra\client\README.md", "Markdown", 9, 0, 0, 0, 0, 0, 0, 0, 8, 17
+"d:\program\kisan-netra\client\eslint.config.js", "JavaScript", 0, 20, 0, 0, 0, 0, 0, 0, 2, 22
+"d:\program\kisan-netra\client\index.html", "HTML", 0, 0, 0, 0, 0, 0, 13, 0, 1, 14
+"d:\program\kisan-netra\client\package-lock.json", "JSON", 0, 0, 0, 0, 0, 3722, 0, 0, 1, 3723
+"d:\program\kisan-netra\client\package.json", "JSON", 0, 0, 0, 0, 0, 34, 0, 0, 1, 35
+"d:\program\kisan-netra\client\postcss.config.js", "JavaScript", 0, 6, 0, 0, 0, 0, 0, 0, 0, 6
+"d:\program\kisan-netra\client\public\favicon.svg", "XML", 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"d:\program\kisan-netra\client\public\icons.svg", "XML", 0, 0, 24, 0, 0, 0, 0, 0, 1, 25
+"d:\program\kisan-netra\client\src\App.css", "CSS", 0, 0, 0, 0, 158, 0, 0, 0, 27, 185
+"d:\program\kisan-netra\client\src\App.jsx", "JavaScript JSX", 0, 0, 0, 33, 0, 0, 0, 0, 6, 39
+"d:\program\kisan-netra\client\src\api\axios.js", "JavaScript", 0, 6, 0, 0, 0, 0, 0, 0, 1, 7
+"d:\program\kisan-netra\client\src\assets\react.svg", "XML", 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"d:\program\kisan-netra\client\src\assets\vite.svg", "XML", 0, 0, 1, 0, 0, 0, 0, 0, 1, 2
+"d:\program\kisan-netra\client\src\components\Navbar.jsx", "JavaScript JSX", 0, 0, 0, 31, 0, 0, 0, 0, 2, 33
+"d:\program\kisan-netra\client\src\components\ProtectedRoute.jsx", "JavaScript JSX", 0, 0, 0, 11, 0, 0, 0, 1, 5, 17
+"d:\program\kisan-netra\client\src\context\AuthContent.jsx", "JavaScript JSX", 0, 0, 0, 41, 0, 0, 0, 3, 9, 53
+"d:\program\kisan-netra\client\src\index.css", "CSS", 0, 0, 0, 0, 103, 0, 0, 0, 16, 119
+"d:\program\kisan-netra\client\src\main.jsx", "JavaScript JSX", 0, 0, 0, 10, 0, 0, 0, 0, 2, 12
+"d:\program\kisan-netra\client\src\pages\DealerDashboard.jsx", "JavaScript JSX", 0, 0, 0, 181, 0, 0, 0, 8, 21, 210
+"d:\program\kisan-netra\client\src\pages\ForgotPassword.jsx", "JavaScript JSX", 0, 0, 0, 98, 0, 0, 0, 0, 6, 104
+"d:\program\kisan-netra\client\src\pages\Home.jsx", "JavaScript JSX", 0, 0, 0, 10, 0, 0, 0, 0, 0, 10
+"d:\program\kisan-netra\client\src\pages\Login.jsx", "JavaScript JSX", 0, 0, 0, 67, 0, 0, 0, 0, 6, 73
+"d:\program\kisan-netra\client\src\pages\Register.jsx", "JavaScript JSX", 0, 0, 0, 78, 0, 0, 0, 0, 5, 83
+"d:\program\kisan-netra\client\tailwind.config.js", "JavaScript", 0, 10, 0, 0, 0, 0, 0, 0, 0, 10
+"d:\program\kisan-netra\client\vite.config.js", "JavaScript", 0, 5, 0, 0, 0, 0, 0, 1, 2, 8
+"d:\program\kisan-netra\server\package-lock.json", "JSON", 0, 0, 0, 0, 0, 6343, 0, 0, 1, 6344
+"d:\program\kisan-netra\server\package.json", "JSON", 0, 0, 0, 0, 0, 36, 0, 0, 1, 37
+"d:\program\kisan-netra\server\server.js", "JavaScript", 0, 9, 0, 0, 0, 0, 0, 1, 2, 12
+"d:\program\kisan-netra\server\src\app.js", "JavaScript", 0, 30, 0, 0, 0, 0, 0, 6, 11, 47
+"d:\program\kisan-netra\server\src\config\db.js", "JavaScript", 0, 12, 0, 0, 0, 0, 0, 0, 1, 13
+"d:\program\kisan-netra\server\src\controllers\auth-controller.js", "JavaScript", 0, 147, 0, 0, 0, 0, 0, 7, 27, 181
+"d:\program\kisan-netra\server\src\controllers\dealer-controller.js", "JavaScript", 0, 120, 0, 0, 0, 0, 0, 7, 11, 138
+"d:\program\kisan-netra\server\src\controllers\product-controller.js", "JavaScript", 0, 54, 0, 0, 0, 0, 0, 4, 7, 65
+"d:\program\kisan-netra\server\src\middleware\auth-middleware.js", "JavaScript", 0, 37, 0, 0, 0, 0, 0, 2, 8, 47
+"d:\program\kisan-netra\server\src\middleware\error-handler.js", "JavaScript", 0, 19, 0, 0, 0, 0, 0, 2, 4, 25
+"d:\program\kisan-netra\server\src\middleware\security-middleware.js", "JavaScript", 0, 27, 0, 0, 0, 0, 0, 4, 4, 35
+"d:\program\kisan-netra\server\src\models\Dealer.js", "JavaScript", 0, 45, 0, 0, 0, 0, 0, 0, 8, 53
+"d:\program\kisan-netra\server\src\models\FarmerInventory.js", "JavaScript", 0, 24, 0, 0, 0, 0, 0, 0, 4, 28
+"d:\program\kisan-netra\server\src\models\Product.js", "JavaScript", 0, 44, 0, 0, 0, 0, 0, 0, 1, 45
+"d:\program\kisan-netra\server\src\models\User.js", "JavaScript", 0, 57, 0, 0, 0, 0, 0, 3, 6, 66
+"d:\program\kisan-netra\server\src\routes\auth-routes.js", "JavaScript", 0, 12, 0, 0, 0, 0, 0, 0, 4, 16
+"d:\program\kisan-netra\server\src\routes\dealer-routes.js", "JavaScript", 0, 16, 0, 0, 0, 0, 0, 0, 4, 20
+"d:\program\kisan-netra\server\src\routes\product-routes.js", "JavaScript", 0, 9, 0, 0, 0, 0, 0, 0, 4, 13
+"d:\program\kisan-netra\server\src\utils\emailService.js", "JavaScript", 0, 19, 0, 0, 0, 0, 0, 0, 6, 25
+"d:\program\kisan-netra\server\src\utils\generateToken.js", "JavaScript", 0, 15, 0, 0, 0, 0, 0, 1, 3, 19
+"d:\program\kisan-netra\server\src\utils\otp.js", "JavaScript", 0, 14, 0, 0, 0, 0, 0, 1, 6, 21
+"Total", "-", 10, 757, 27, 560, 261, 10135, 13, 51, 248, 12062
