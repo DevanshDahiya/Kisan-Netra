@@ -1,4 +1,59 @@
 const Dealer = require('../models/Dealer');
+const DealerStock = require('../models/DealerStock');
+
+// route GET /api/dealers/nearby?lng=&productId=&radius=
+
+const getNearbyDealers = async (req, res, next) => {
+    try {
+        const { lng, lat, productId, radius } = req.query;
+
+        if (!lng || !lat) {
+            return res.status(400).json({ message: 'lng and lat query parameters are required.' });
+        }
+
+        const maxDistanceMeters = radius ? Number(radius) * 1000 : 20000; // default 20km
+
+        let dealerIdFilter = null;
+        if (productId) {
+            const stockEntries = await DealerStock.find({
+                product: productId,
+                quantityAvailable: { $gt: 0 },
+            }).select('dealer');
+            dealerIdFilter = stockEntries.map((s) => s.dealer);
+        }
+
+        // $geoNear must be the first stage in the pipeline, and it requires the
+        // 2dsphere index. It returns a "distance" field (in meters) on each result -
+        // that's the reason to use aggregation here instead of a plain find() + $near.
+
+        const pipeline = [
+            {
+                $geoNear: {
+                    near: { type: 'Point', coordinates: [Number(lng), Number(lat)] },
+                    distanceField: 'distance',
+                    maxDistance: maxDistanceMeters,
+                    spherical: true,
+                    query: {
+                        isVerified: true,
+                        ...(dealerIdFilter ? { _id: { $in: dealerIdFilter } } : {}),
+                    },
+                },
+            },
+            { $limit: 20 },
+        ];
+
+        const dealers = await Dealer.aggregate(pipeline);
+        res.status(200).json({
+            count: dealers.length,
+            dealers
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+};
+
+
 
 // firstly , only loggedin user can create  their own store profile 
 // route - > POST /api/dealer
@@ -8,7 +63,7 @@ const createDealer = async (req, res, next) => {
         const existing = await Dealer.findOne({ user: req.user._id });
         if (existing) {
             return res.status(400).json({
-                message: 'You already hav ea store profile.'
+                message: 'You already have a store profile. Use update instead.'
             });
         }
         const { storeName, address, licenseNumber, longitude, latitude, contactPhone } = req.body;
@@ -129,10 +184,34 @@ const deleteDealer = async (req, res, next) => {
     }
 };
 
+// PATCH /api/dealers/:id/verify - admin only
+const verifyDealer = async (req, res, next) => {
+    try {
+        const dealer = await Dealer.findByIdAndUpdate(
+            req.params.id,
+            { isVerified: true },
+            { new: true }
+        );
+        if (!dealer) {
+            return res.status(404).json({
+                message: 'Dealer not found.'
+            });
+        }
+        res.status(200).json({ dealer });
+    }
+    catch (err) {
+        next(err);
+    }
+};
+
+
+
 module.exports = {
     createDealer,
     getDealer,
     getMyDealerProfile,
     updateDealer,
     deleteDealer,
+    getNearbyDealers,
+    verifyDealer,
 };

@@ -14,7 +14,10 @@ export default function Navbar() {
               <Link to="/dealers/dashboard" className="hover:underline">My Store</Link>
             )}
             {user.role === 'farmer' && (
-              <Link to="/farmer/dashboard" className="hover:underline">My Inventory</Link>
+              <>
+                <Link to="/farmer/dashboard" className="hover:underline">My Inventory</Link>
+                <Link to="/search-dealers" className="hover:underline">Find Dealers</Link>
+              </>
             )}
             <span className="text-sm">Welcome, {user.name}</span>
             <button
