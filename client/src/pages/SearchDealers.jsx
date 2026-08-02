@@ -135,6 +135,12 @@ export default function SearchDealers() {
                                     {dealer.address}
                                     <br />
                                     {dealer.distance != null ? (dealer.distance / 1000).toFixed(1) : 'N/A'} km away
+                                    {dealer.stockInfo && (
+                                        <>
+                                            <br />
+                                            In stock: {dealer.stockInfo.quantityAvailable} {dealer.stockInfo.unit}
+                                        </>
+                                    )}
                                 </Popup>
                             </Marker>
                         ))}
@@ -153,6 +159,11 @@ export default function SearchDealers() {
                                 <p className="text-sm text-gray-500">{dealer.address}</p>
                                 {dealer.contactPhone && (
                                     <p className="text-xs text-gray-400">📞 {dealer.contactPhone}</p>
+                                )}
+                                {dealer.stockInfo && (
+                                    <p className="text-xs text-green-700 font-medium mt-1">
+                                        In stock: {dealer.stockInfo.quantityAvailable} {dealer.stockInfo.unit}
+                                    </p>
                                 )}
                             </div>
                             <span className="text-sm font-medium text-green-700">

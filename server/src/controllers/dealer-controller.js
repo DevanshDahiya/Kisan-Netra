@@ -1,8 +1,9 @@
 const Dealer = require('../models/Dealer');
 const DealerStock = require('../models/DealerStock');
 
-// route GET /api/dealers/nearby?lng=&productId=&radius=
-
+// @route GET /api/dealers/nearby?lng=&lat=&productId=&radius=
+// The standout feature: find dealers near a location, optionally filtered to
+// only those who stock a specific product.
 const getNearbyDealers = async (req, res, next) => {
     try {
         const { lng, lat, productId, radius } = req.query;
@@ -14,18 +15,21 @@ const getNearbyDealers = async (req, res, next) => {
         const maxDistanceMeters = radius ? Number(radius) * 1000 : 20000; // default 20km
 
         let dealerIdFilter = null;
+        let quantityByDealer = {}; // dealerId -> quantityAvailable, used to enrich results below
         if (productId) {
             const stockEntries = await DealerStock.find({
                 product: productId,
                 quantityAvailable: { $gt: 0 },
-            }).select('dealer');
+            }).select('dealer quantityAvailable unit');
             dealerIdFilter = stockEntries.map((s) => s.dealer);
+            stockEntries.forEach((s) => {
+                quantityByDealer[s.dealer.toString()] = { quantityAvailable: s.quantityAvailable, unit: s.unit };
+            });
         }
 
         // $geoNear must be the first stage in the pipeline, and it requires the
         // 2dsphere index. It returns a "distance" field (in meters) on each result -
         // that's the reason to use aggregation here instead of a plain find() + $near.
-
         const pipeline = [
             {
                 $geoNear: {
@@ -43,30 +47,30 @@ const getNearbyDealers = async (req, res, next) => {
         ];
 
         const dealers = await Dealer.aggregate(pipeline);
-        res.status(200).json({
-            count: dealers.length,
-            dealers
-        });
-    }
-    catch (err) {
+
+        // Attach stock quantity for the filtered product, if applicable
+        const enrichedDealers = dealers.map((d) => ({
+            ...d,
+            stockInfo: quantityByDealer[d._id.toString()] || null,
+        }));
+
+        res.status(200).json({ count: enrichedDealers.length, dealers: enrichedDealers });
+    } catch (err) {
         next(err);
     }
 };
 
-
-
-// firstly , only loggedin user can create  their own store profile 
-// route - > POST /api/dealer
-
+// @route POST /api/dealers
+// Only a logged-in dealer can create their own store profile
 const createDealer = async (req, res, next) => {
     try {
         const existing = await Dealer.findOne({ user: req.user._id });
         if (existing) {
-            return res.status(400).json({
-                message: 'You already have a store profile. Use update instead.'
-            });
+            return res.status(400).json({ message: 'You already have a store profile. Use update instead.' });
         }
+
         const { storeName, address, licenseNumber, longitude, latitude, contactPhone } = req.body;
+
         const dealer = await Dealer.create({
             user: req.user._id,
             storeName,
@@ -74,117 +78,93 @@ const createDealer = async (req, res, next) => {
             licenseNumber,
             location: {
                 type: 'Point',
-                coordinates: [longitude, latitude],
+                coordinates: [longitude, latitude], // order matters: [lng, lat]
             },
             contactPhone,
-
         });
+
         res.status(201).json({ dealer });
-    }
-    catch (err) {
+    } catch (err) {
         next(err);
     }
 };
 
-// route GET /api/dealers/:id 
+// @route GET /api/dealers/:id
 const getDealer = async (req, res, next) => {
     try {
         const dealer = await Dealer.findById(req.params.id).populate('user', 'name email phone');
         if (!dealer) {
-            return res.status(404).json({
-                message: 'Dealer not found',
-            });
+            return res.status(404).json({ message: 'Dealer not found.' });
         }
         res.status(200).json({ dealer });
-    }
-    catch (err) {
+    } catch (err) {
         next(err);
     }
 };
 
-// GET /api/dealers/me - own dealer profile 
+// @route GET /api/dealers/me - the logged-in dealer's own profile
 const getMyDealerProfile = async (req, res, next) => {
     try {
         const dealer = await Dealer.findOne({ user: req.user._id });
         if (!dealer) {
-            return res.status(404).json({
-                message: 'You have not created a store profile yet',
-            });
+            return res.status(404).json({ message: 'You have not created a store profile yet.' });
         }
         res.status(200).json({ dealer });
-    }
-    catch (err) {
+    } catch (err) {
         next(err);
     }
 };
 
-// route PATCH /api/dealers/:id 
-
+// @route PATCH /api/dealers/:id
 const updateDealer = async (req, res, next) => {
     try {
         const dealer = await Dealer.findById(req.params.id);
         if (!dealer) {
-            return res.status(404).json({
-                message: 'Dealer not found',
-            });
+            return res.status(404).json({ message: 'Dealer not found.' });
         }
-        // check if it is your store or not 
+
+        // Ownership check - same pattern as your Task Manager project
         if (dealer.user.toString() !== req.user._id.toString()) {
-            return res.status(403).json({
-                message: "You can only update your own store profile"
-            });
+            return res.status(403).json({ message: 'You can only update your own store profile.' });
         }
+
         const { storeName, address, licenseNumber, longitude, latitude, contactPhone } = req.body;
 
-        if (storeName) {
-            dealer.storeName = storeName;
-        }
-        if (address) {
-            dealer.address = address
-        }
-        if (licenseNumber) {
-            dealer.licenseNumber = licenseNumber
-        }
-        if (contactPhone) {
-            dealer.contactPhone = contactPhone
-        }
+        if (storeName) dealer.storeName = storeName;
+        if (address) dealer.address = address;
+        if (licenseNumber) dealer.licenseNumber = licenseNumber;
+        if (contactPhone) dealer.contactPhone = contactPhone;
         if (longitude !== undefined && latitude !== undefined) {
             dealer.location.coordinates = [longitude, latitude];
         }
 
         await dealer.save();
         res.status(200).json({ dealer });
-    }
-    catch (err) {
+    } catch (err) {
         next(err);
     }
 };
 
-// DELETE /api/delaers/:id 
+// @route DELETE /api/dealers/:id
 const deleteDealer = async (req, res, next) => {
     try {
         const dealer = await Dealer.findById(req.params.id);
         if (!dealer) {
-            return res.status(404).json({
-                message: 'Dealer not found.'
-            });
+            return res.status(404).json({ message: 'Dealer not found.' });
         }
+
         if (dealer.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-            return res.status(403).json({
-                message: 'You can only delete your own store profile.'
-            });
+            return res.status(403).json({ message: 'You can only delete your own store profile.' });
         }
+
         await dealer.deleteOne();
-        res.status(200).json({
-            message: 'Dealer profile deleted.'
-        });
-    }
-    catch (err) {
+        res.status(200).json({ message: 'Dealer profile deleted.' });
+    } catch (err) {
         next(err);
     }
 };
 
-// PATCH /api/dealers/:id/verify - admin only
+// @route PATCH /api/dealers/:id/verify - admin only
 const verifyDealer = async (req, res, next) => {
     try {
         const dealer = await Dealer.findByIdAndUpdate(
@@ -193,25 +173,12 @@ const verifyDealer = async (req, res, next) => {
             { new: true }
         );
         if (!dealer) {
-            return res.status(404).json({
-                message: 'Dealer not found.'
-            });
+            return res.status(404).json({ message: 'Dealer not found.' });
         }
         res.status(200).json({ dealer });
-    }
-    catch (err) {
+    } catch (err) {
         next(err);
     }
 };
 
-
-
-module.exports = {
-    createDealer,
-    getDealer,
-    getMyDealerProfile,
-    updateDealer,
-    deleteDealer,
-    getNearbyDealers,
-    verifyDealer,
-};
+module.exports = { createDealer, getDealer, getMyDealerProfile, updateDealer, deleteDealer, getNearbyDealers, verifyDealer };

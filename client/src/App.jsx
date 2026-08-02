@@ -9,6 +9,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import DealerDashboard from './pages/DealerDashboard';
 import FarmerDashboard from "./pages/FarmerDashboard";
 import SearchDealers  from './pages/SearchDealers' ;
+import ProductCatalog from "./pages/ProductCatalog";
 
 function App() {
   return (
@@ -41,6 +42,14 @@ function App() {
             element={
               <ProtectedRoute roles={['farmer']}>
                 <SearchDealers />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path = "/catalog"
+            element={
+              <ProtectedRoute>
+                <ProductCatalog />
               </ProtectedRoute>
             }
           />

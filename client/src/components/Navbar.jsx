@@ -10,6 +10,7 @@ export default function Navbar() {
       <div className="flex gap-4 items-center">
         {user ? (
           <>
+            <Link to="/catalog" className="hover:underline">Catalog</Link>
             {user.role === 'dealer' && (
               <Link to="/dealers/dashboard" className="hover:underline">My Store</Link>
             )}
