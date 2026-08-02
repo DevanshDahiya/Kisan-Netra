@@ -31,12 +31,12 @@ describe('Auth flow', () => {
         role: 'farmer',
     };
 
-    test('registers a new user and sets a session cookie', async () => {
+    test('registers a new user without issuing a session cookie (requires explicit login)', async () => {
         const res = await request(app).post('/api/auth/register').send(testUser);
 
         expect(res.status).toBe(201);
         expect(res.body.user.email).toBe(testUser.email);
-        expect(res.headers['set-cookie']).toBeDefined();
+        expect(res.headers['set-cookie']).toBeUndefined(); // no auto-login cookie
     });
 
     test('rejects registration with a duplicate email', async () => {
@@ -52,10 +52,10 @@ describe('Auth flow', () => {
             .send({ ...testUser, email: 'sneaky@example.com', role: 'admin' });
 
         expect(res.status).toBe(201);
-        expect(res.body.user.role).toBe('farmer'); // silently downgraded, not rejected
+        expect(res.body.user.role).toBe('farmer'); // silently downgraded
     });
 
-    test('logs in with correct credentials', async () => {
+    test('logs in with correct credentials and issues HttpOnly session cookie', async () => {
         await request(app).post('/api/auth/register').send(testUser);
         const res = await request(app)
             .post('/api/auth/login')
@@ -63,6 +63,7 @@ describe('Auth flow', () => {
 
         expect(res.status).toBe(200);
         expect(res.body.user.email).toBe(testUser.email);
+        expect(res.headers['set-cookie']).toBeDefined();
     });
 
     test('rejects login with wrong password', async () => {
@@ -79,12 +80,31 @@ describe('Auth flow', () => {
         expect(res.status).toBe(401);
     });
 
-    test('allows /me with a valid session cookie', async () => {
-        const agent = request.agent(app); // agent persists cookies across requests
+    test('allows /me with a valid session cookie after explicit login', async () => {
+        const agent = request.agent(app);
         await agent.post('/api/auth/register').send(testUser);
+        await agent.post('/api/auth/login').send({ email: testUser.email, password: testUser.password });
+        
         const res = await agent.get('/api/auth/me');
-
         expect(res.status).toBe(200);
         expect(res.body.user.email).toBe(testUser.email);
+    });
+
+    test('destroys session cookie on logout', async () => {
+        const agent = request.agent(app);
+        await agent.post('/api/auth/register').send(testUser);
+        await agent.post('/api/auth/login').send({ email: testUser.email, password: testUser.password });
+
+        // Confirm logged in
+        let meRes = await agent.get('/api/auth/me');
+        expect(meRes.status).toBe(200);
+
+        // Perform logout
+        const logoutRes = await agent.post('/api/auth/logout');
+        expect(logoutRes.status).toBe(200);
+
+        // /me must now be rejected with 401
+        meRes = await agent.get('/api/auth/me');
+        expect(meRes.status).toBe(401);
     });
 });

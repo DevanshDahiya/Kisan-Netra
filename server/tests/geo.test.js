@@ -14,15 +14,13 @@ const NEAR_POINT = { lng: 72.5714, lat: 23.0225 };
 const NEARBY_DEALER_POINT = { lng: 72.62, lat: 23.05 };
 const FAR_DEALER_POINT = { lng: 77.209, lat: 28.6139 };
 
-// Override MONGO_URI so connectDB picks up the test database
 process.env.MONGO_URI = TEST_DB_URI;
 
 beforeAll(async () => {
-    // Only connect if not already connected (avoids conflict with app startup)
     if (mongoose.connection.readyState === 0) {
         await connectDB();
     }
-}, 60000); // 60 second timeout for slow Atlas connections
+}, 60000);
 
 afterEach(async () => {
     await User.deleteMany({});
@@ -36,14 +34,22 @@ afterAll(async () => {
     await mongoose.disconnect();
 }, 30000);
 
-// Helper: registers a dealer, creates their verified store at a given point
+// Helper: registers a dealer, logs in explicitly, creates their verified store
 async function createVerifiedDealer(point, storeName) {
     const agent = request.agent(app);
+    const email = `${storeName.replace(/\s/g, '').toLowerCase()}@test.com`;
+    const password = 'password123';
+
     await agent.post('/api/auth/register').send({
         name: storeName,
-        email: `${storeName.replace(/\s/g, '').toLowerCase()}@test.com`,
-        password: 'password123',
+        email,
+        password,
         role: 'dealer',
+    });
+
+    await agent.post('/api/auth/login').send({
+        email,
+        password,
     });
 
     const dealerRes = await agent.post('/api/dealers').send({
@@ -57,7 +63,7 @@ async function createVerifiedDealer(point, storeName) {
     const dealer = await Dealer.findByIdAndUpdate(
         dealerRes.body.dealer._id,
         { isVerified: true },
-        { new: true }
+        { returnDocument: 'after' }
     );
 
     return { agent, dealer };
@@ -71,7 +77,7 @@ describe('Nearby dealer geo-search', () => {
         const res = await request(app).get('/api/dealers/nearby').query({
             lng: NEAR_POINT.lng,
             lat: NEAR_POINT.lat,
-            radius: 20, // 20km - should catch "Near Store" but not "Far Store"
+            radius: 20,
         });
 
         expect(res.status).toBe(200);
@@ -106,7 +112,6 @@ describe('Nearby dealer geo-search', () => {
             licenseNumber: 'LIC-TESTPROD',
         });
 
-        // Only Store A stocks this product
         await agentA.post(`/api/dealers/${dealerA._id}/stock`).send({
             product: product._id,
             quantityAvailable: 10,

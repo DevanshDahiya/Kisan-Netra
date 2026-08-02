@@ -9,8 +9,7 @@ const register = async (req, res, next) => {
         const { name, email, password, role, phone } = req.body;
 
         // Public signup only allows farmer/dealer. Admin accounts are created
-        // separately (via seed script) - never exposed through a public endpoint,
-        // since anyone being able to self-assign admin is a real security hole.
+        // separately (via seed script) - never exposed through a public endpoint.
         const allowedPublicRoles = ['farmer', 'dealer'];
         const safeRole = allowedPublicRoles.includes(role) ? role : 'farmer';
 
@@ -20,10 +19,11 @@ const register = async (req, res, next) => {
         }
 
         const user = await User.create({ name, email, password, role: safeRole, phone });
-        const token = generateToken(user._id, user.role);
-        sendTokenCookie(res, token);
 
+        // Industry standard security requirement: registration does NOT automatically
+        // issue a session cookie or log the user in. The user must explicitly log in.
         res.status(201).json({
+            message: 'Registration successful! Please log in with your credentials.',
             user: { id: user._id, name: user.name, email: user.email, role: user.role },
         });
     } catch (err) {
@@ -52,6 +52,22 @@ const login = async (req, res, next) => {
     }
 };
 
+// @route POST /api/auth/logout
+const logout = async (req, res, next) => {
+    try {
+        // Explicitly clear the token HttpOnly cookie on logout
+        res.cookie('token', '', {
+            httpOnly: true,
+            expires: new Date(0),
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+        });
+        res.status(200).json({ message: 'Logged out successfully.' });
+    } catch (err) {
+        next(err);
+    }
+};
+
 // @route GET /api/auth/me
 const getMe = async (req, res, next) => {
     try {
@@ -67,8 +83,6 @@ const forgotPassword = async (req, res, next) => {
         const { email } = req.body;
         const user = await User.findOne({ email });
 
-        // Always return the same message whether or not the user exists -
-        // prevents attackers from using this endpoint to discover valid emails
         const genericResponse = { message: 'If that email is registered, an OTP has been sent.' };
 
         if (!user) {
@@ -143,7 +157,7 @@ const resetPassword = async (req, res, next) => {
             return res.status(400).json({ message: 'Incorrect OTP.' });
         }
 
-        user.password = newPassword; // pre('save') hook will hash this
+        user.password = newPassword;
         user.resetPasswordOTP = undefined;
         user.resetPasswordExpires = undefined;
         user.resetOTPAttempts = 0;
@@ -155,4 +169,4 @@ const resetPassword = async (req, res, next) => {
     }
 };
 
-module.exports = { register, login, getMe, forgotPassword, verifyOTP, resetPassword };
+module.exports = { register, login, logout, getMe, forgotPassword, verifyOTP, resetPassword };
