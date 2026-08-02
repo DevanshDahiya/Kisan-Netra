@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const productSchema = new mongoose.Schema(
     {
         name: {
@@ -8,7 +9,7 @@ const productSchema = new mongoose.Schema(
         },
         category: {
             type: String,
-            enum: ['pesticide', 'fertilizer', 'fungicide', 'heribicide'],
+            enum: ['pesticide', 'fertilizer', 'fungicide', 'herbicide'],
             required: [true, 'Category is required'],
         },
         licenseNumber: {
@@ -26,7 +27,7 @@ const productSchema = new mongoose.Schema(
             trim: true,
         },
         cropTypes: {
-            type: [String], //e.g.- ['sugarcan','cotton','wheat']
+            type: [String], // e.g. ['cotton', 'wheat', 'rice']
             default: [],
         },
         isBanned: {
@@ -37,9 +38,7 @@ const productSchema = new mongoose.Schema(
             type: Date,
         },
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
-module.exports = mongoose.model('Product' , productSchema) ;
+module.exports = mongoose.model('Product', productSchema);

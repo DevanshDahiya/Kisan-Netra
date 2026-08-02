@@ -36,7 +36,7 @@ const getProduct = async (req, res, next) => {
     }
 };
 
-// @route POST /api/products - admin only
+// @route POST /api/products - admin or dealer can add, product goes live immediately
 const createProduct = async (req, res, next) => {
     try {
         const product = await Product.create(req.body);
