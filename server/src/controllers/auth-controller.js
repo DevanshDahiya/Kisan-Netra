@@ -1,7 +1,13 @@
 const User = require('../models/User');
+<<<<<<< HEAD
 const { generateToken, sendTokenCookie, clearTokenCookie } = require('../utils/generateToken');
 const { generateOTP, hashOTP, compareOTP, OTP_EXPIRY_MINUTES, MAX_OTP_ATTEMPTS } = require('../utils/otp');
 const { sendOTPEmail } = require('../utils/emailService');
+=======
+const { generateToken, sendTokenCookie } = require('../utils/generateToken');
+const { generateOTP, hashOTP, compareOTP, OTP_EXPIRY_MINUTES, MAX_OTP_ATTEMPTS } = require('../utils/Otp');
+const { sendOTPEmail } = require('../utils/EmailService');
+>>>>>>> b8844b061963cfcf8c22a5793e5fa789d7e6d76c
 
 // @route POST /api/auth/register
 const register = async (req, res, next) => {
