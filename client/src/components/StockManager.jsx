@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { Package, Plus, Trash2, AlertCircle, CheckCircle2, FilePlus, Save } from 'lucide-react';
+import { Package, Plus, Trash2, AlertCircle, CheckCircle2, FilePlus } from 'lucide-react';
 
 export default function StockManager({ dealerId }) {
     const [stock, setStock] = useState([]);
@@ -14,11 +14,15 @@ export default function StockManager({ dealerId }) {
     const [unit, setUnit] = useState('liters');
     const [addingStock, setAddingStock] = useState(false);
 
-    // Suggest new product form state
+    // Suggest new product form state with all 7 fields
     const [showSuggestForm, setShowSuggestForm] = useState(false);
     const [newProductName, setNewProductName] = useState('');
     const [newProductCategory, setNewProductCategory] = useState('pesticide');
     const [newProductLicense, setNewProductLicense] = useState('');
+    const [newProductActiveIngredient, setNewProductActiveIngredient] = useState('');
+    const [newProductManufacturer, setNewProductManufacturer] = useState('');
+    const [newProductCropTypes, setNewProductCropTypes] = useState('');
+    const [newProductRegistrationExpiry, setNewProductRegistrationExpiry] = useState('');
     const [suggestMessage, setSuggestMessage] = useState('');
 
     const loadData = async () => {
@@ -95,14 +99,26 @@ export default function StockManager({ dealerId }) {
         setError('');
         setSuggestMessage('');
         try {
+            const cropTypesArray = newProductCropTypes
+                ? newProductCropTypes.split(',').map((s) => s.trim()).filter(Boolean)
+                : [];
+
             await api.post('/products', {
                 name: newProductName,
                 category: newProductCategory,
                 licenseNumber: newProductLicense,
+                activeIngredient: newProductActiveIngredient,
+                manufacturer: newProductManufacturer,
+                cropTypes: cropTypesArray,
+                registrationExpiry: newProductRegistrationExpiry ? new Date(newProductRegistrationExpiry) : undefined,
             });
             setSuggestMessage('New product added to catalog and live immediately!');
             setNewProductName('');
             setNewProductLicense('');
+            setNewProductActiveIngredient('');
+            setNewProductManufacturer('');
+            setNewProductCropTypes('');
+            setNewProductRegistrationExpiry('');
             setShowSuggestForm(false);
             loadData();
         } catch (err) {
@@ -110,50 +126,52 @@ export default function StockManager({ dealerId }) {
         }
     };
 
-    const stockedProductIds = new Set(stock.map((s) => s.product._id));
+    const stockedProductIds = new Set(stock.map((s) => s.product?._id));
     const availableToAdd = products.filter((p) => !stockedProductIds.has(p._id));
 
-    if (loading) return <p className="text-center text-slate-500 py-6">Loading store inventory...</p>;
+    if (loading) return <p className="text-center text-neutral-500 dark:text-neutral-400 py-6 text-sm">Loading store inventory...</p>;
 
     return (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mt-8">
+        <div className="bg-white dark:bg-darkSurface-card border border-neutral-200 dark:border-darkSurface-border rounded-2xl p-6 sm:p-8 shadow-xs">
             
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                        <Package className="w-5 h-5 text-emerald-600" />
-                        <span>Manage Store Stock</span>
+                    <h3 className="font-display text-xl font-semibold text-neutral-900 dark:text-neutral-50 flex items-center gap-2">
+                        <Package className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        <span>Manage Store Stock & Quantities</span>
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Control product quantities visible to farmers searching in your area.</p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        Stock levels are displayed in real-time to farmers searching within your geographic radius.
+                    </p>
                 </div>
             </div>
 
             {/* Notifications */}
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-4 mb-4 flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="bg-accent-50 dark:bg-accent-950/40 border border-accent-200 dark:border-accent-800/60 text-accent-900 dark:text-accent-200 text-sm rounded-xl p-4 mb-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-accent-600 dark:text-accent-400 flex-shrink-0 mt-0.5" />
                     <p>{error}</p>
                 </div>
             )}
             {successMsg && (
-                <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-xl p-4 mb-4 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div className="bg-primary-50 dark:bg-primary-950/40 border border-primary-200 dark:border-primary-800/60 text-primary-900 dark:text-primary-200 text-sm rounded-xl p-4 mb-4 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
                     <p>{successMsg}</p>
                 </div>
             )}
 
             {/* Form: Add Existing Catalog Product to Stock */}
-            <form onSubmit={handleAddStock} className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <form onSubmit={handleAddStock} className="bg-neutral-50 dark:bg-darkSurface-surface border border-neutral-200 dark:border-darkSurface-border rounded-xl p-4 mb-6 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                 <div className="sm:col-span-5">
-                    <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wider">
+                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5 uppercase tracking-wider">
                         Catalog Product
                     </label>
                     <select
                         value={selectedProduct}
                         onChange={(e) => setSelectedProduct(e.target.value)}
                         required
-                        className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                        className="w-full px-3.5 py-2.5 border border-neutral-300 dark:border-darkSurface-border rounded-btn bg-white dark:bg-darkSurface-card text-neutral-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent transition-all"
                     >
                         <option value="">Select a product to stock...</option>
                         {availableToAdd.map((p) => (
@@ -165,7 +183,7 @@ export default function StockManager({ dealerId }) {
                 </div>
 
                 <div className="sm:col-span-3">
-                    <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wider">
+                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5 uppercase tracking-wider">
                         Available Qty
                     </label>
                     <input
@@ -176,19 +194,19 @@ export default function StockManager({ dealerId }) {
                         value={quantityAvailable}
                         onChange={(e) => setQuantityAvailable(e.target.value)}
                         required
-                        className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                        className="w-full px-3.5 py-2.5 border border-neutral-300 dark:border-darkSurface-border rounded-btn bg-white dark:bg-darkSurface-card text-neutral-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent transition-all"
                     />
                 </div>
 
                 <div className="sm:col-span-4 flex gap-2">
                     <div className="flex-1">
-                        <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wider">
+                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5 uppercase tracking-wider">
                             Unit
                         </label>
                         <select
                             value={unit}
                             onChange={(e) => setUnit(e.target.value)}
-                            className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                            className="w-full px-3.5 py-2.5 border border-neutral-300 dark:border-darkSurface-border rounded-btn bg-white dark:bg-darkSurface-card text-neutral-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent transition-all"
                         >
                             <option value="liters">Liters</option>
                             <option value="kg">Kg</option>
@@ -198,7 +216,7 @@ export default function StockManager({ dealerId }) {
                     <button
                         type="submit"
                         disabled={addingStock}
-                        className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-1 flex-shrink-0 text-sm"
+                        className="px-4 py-2.5 bg-accent-600 hover:bg-accent-700 text-white font-medium rounded-btn transition-colors shadow-2xs disabled:opacity-50 flex items-center justify-center gap-1 flex-shrink-0 text-sm"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Add</span>
@@ -211,105 +229,156 @@ export default function StockManager({ dealerId }) {
                 <button
                     type="button"
                     onClick={() => setShowSuggestForm(!showSuggestForm)}
-                    className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 hover:underline"
+                    className="text-xs font-semibold text-accent-700 dark:text-accent-400 hover:text-accent-800 dark:hover:text-accent-300 flex items-center gap-1 hover:underline"
                 >
                     <FilePlus className="w-4 h-4" />
-                    <span>{showSuggestForm ? 'Close Product Creation Form' : "Can't find your chemical product? Create new catalog product"}</span>
+                    <span>{showSuggestForm ? 'Close Product Registration Form' : "Can't find your chemical product in the list? Add new catalog product"}</span>
                 </button>
 
                 {suggestMessage && (
-                    <div className="bg-emerald-50 text-emerald-800 text-xs rounded-xl p-3 mt-2 border border-emerald-200">
+                    <div className="bg-primary-50 dark:bg-primary-950/40 text-primary-800 dark:text-primary-300 text-xs rounded-xl p-3 mt-2 border border-primary-200 dark:border-primary-800/60">
                         {suggestMessage}
                     </div>
                 )}
 
                 {showSuggestForm && (
-                    <form onSubmit={handleAddNewProduct} className="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                        <div className="sm:col-span-4">
-                            <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wider">Product Name</label>
-                            <input
-                                type="text"
-                                placeholder="e.g. Coragen"
-                                value={newProductName}
-                                onChange={(e) => setNewProductName(e.target.value)}
-                                required
-                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white"
-                            />
+                    <form onSubmit={handleAddNewProduct} className="mt-3 bg-neutral-50 dark:bg-darkSurface-surface border border-neutral-200 dark:border-darkSurface-border rounded-xl p-5 space-y-4">
+                        <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 border-b border-neutral-200 dark:border-darkSurface-border pb-2">
+                            Add Detailed Product Information
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1 uppercase tracking-wider">Product Name *</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Coragen"
+                                    value={newProductName}
+                                    onChange={(e) => setNewProductName(e.target.value)}
+                                    required
+                                    className="w-full px-3 py-2 border border-neutral-300 dark:border-darkSurface-border rounded-btn text-xs bg-white dark:bg-darkSurface-card text-neutral-900 dark:text-neutral-100"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1 uppercase tracking-wider">Category *</label>
+                                <select
+                                    value={newProductCategory}
+                                    onChange={(e) => setNewProductCategory(e.target.value)}
+                                    className="w-full px-3 py-2 border border-neutral-300 dark:border-darkSurface-border rounded-btn text-xs bg-white dark:bg-darkSurface-card text-neutral-900 dark:text-neutral-100 capitalize"
+                                >
+                                    <option value="pesticide">Pesticide</option>
+                                    <option value="fertilizer">Fertilizer</option>
+                                    <option value="fungicide">Fungicide</option>
+                                    <option value="herbicide">Herbicide</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1 uppercase tracking-wider">CIB / FCO License No. *</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. CIB-REG-10023"
+                                    value={newProductLicense}
+                                    onChange={(e) => setNewProductLicense(e.target.value)}
+                                    required
+                                    className="w-full px-3 py-2 border border-neutral-300 dark:border-darkSurface-border rounded-btn text-xs bg-white dark:bg-darkSurface-card text-neutral-900 dark:text-neutral-100 font-mono"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1 uppercase tracking-wider">Active Ingredient</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Chlorantraniliprole 18.5% SC"
+                                    value={newProductActiveIngredient}
+                                    onChange={(e) => setNewProductActiveIngredient(e.target.value)}
+                                    className="w-full px-3 py-2 border border-neutral-300 dark:border-darkSurface-border rounded-btn text-xs bg-white dark:bg-darkSurface-card text-neutral-900 dark:text-neutral-100"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1 uppercase tracking-wider">Manufacturer</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. FMC Corporation"
+                                    value={newProductManufacturer}
+                                    onChange={(e) => setNewProductManufacturer(e.target.value)}
+                                    className="w-full px-3 py-2 border border-neutral-300 dark:border-darkSurface-border rounded-btn text-xs bg-white dark:bg-darkSurface-card text-neutral-900 dark:text-neutral-100"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1 uppercase tracking-wider">Registration Expiry Date</label>
+                                <input
+                                    type="date"
+                                    value={newProductRegistrationExpiry}
+                                    onChange={(e) => setNewProductRegistrationExpiry(e.target.value)}
+                                    className="w-full px-3 py-2 border border-neutral-300 dark:border-darkSurface-border rounded-btn text-xs bg-white dark:bg-darkSurface-card text-neutral-900 dark:text-neutral-100"
+                                />
+                            </div>
+
+                            <div className="sm:col-span-2 lg:col-span-3">
+                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1 uppercase tracking-wider">Suitable Crop Types (comma-separated)</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Cotton, Rice, Chilli, Sugarcane"
+                                    value={newProductCropTypes}
+                                    onChange={(e) => setNewProductCropTypes(e.target.value)}
+                                    className="w-full px-3 py-2 border border-neutral-300 dark:border-darkSurface-border rounded-btn text-xs bg-white dark:bg-darkSurface-card text-neutral-900 dark:text-neutral-100"
+                                />
+                            </div>
                         </div>
-                        <div className="sm:col-span-3">
-                            <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wider">Category</label>
-                            <select
-                                value={newProductCategory}
-                                onChange={(e) => setNewProductCategory(e.target.value)}
-                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white capitalize"
-                            >
-                                <option value="pesticide">Pesticide</option>
-                                <option value="fertilizer">Fertilizer</option>
-                                <option value="fungicide">Fungicide</option>
-                                <option value="herbicide">Herbicide</option>
-                            </select>
-                        </div>
-                        <div className="sm:col-span-3">
-                            <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wider">CIB License No.</label>
-                            <input
-                                type="text"
-                                placeholder="e.g. CIB-REG-10023"
-                                value={newProductLicense}
-                                onChange={(e) => setNewProductLicense(e.target.value)}
-                                required
-                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-mono"
-                            />
-                        </div>
-                        <div className="sm:col-span-2">
+
+                        <div className="flex justify-end pt-2">
                             <button
                                 type="submit"
-                                className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg text-xs transition-colors shadow-xs"
+                                className="px-5 py-2.5 bg-primary-700 hover:bg-primary-800 text-white font-medium rounded-btn text-xs transition-colors shadow-2xs flex items-center gap-1.5"
                             >
-                                Save Product
+                                <Plus className="w-4 h-4" /> Save & Publish Product
                             </button>
                         </div>
                     </form>
                 )}
             </div>
 
-            {/* Current Stock Table / Grid */}
+            {/* Current Stock List */}
             {stock.length === 0 ? (
-                <p className="text-slate-500 text-sm text-center py-6 border border-dashed border-slate-200 rounded-xl">
-                    No products added to your store stock yet. Select one above.
+                <p className="text-neutral-500 dark:text-neutral-400 text-sm text-center py-8 border border-dashed border-neutral-300 dark:border-darkSurface-border rounded-xl">
+                    No products added to your store stock yet. Select a catalog product above to add inventory.
                 </p>
             ) : (
                 <div className="space-y-3">
                     {stock.map((item) => (
-                        <div key={item._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition-colors bg-white">
+                        <div key={item._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-neutral-200 dark:border-darkSurface-border rounded-xl p-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors bg-white dark:bg-darkSurface-surface">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <h4 className="font-bold text-slate-900 text-sm">{item.product?.name}</h4>
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 text-indigo-800 capitalize">
+                                    <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">{item.product?.name}</h4>
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 dark:bg-darkSurface-card text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-darkSurface-border capitalize">
                                         {item.product?.category}
                                     </span>
                                 </div>
-                                <p className="text-xs text-slate-400 mt-1 font-mono">
+                                <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1 font-mono">
                                     License: {item.product?.licenseNumber}
                                 </p>
                             </div>
 
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-1.5">
-                                    <span className="text-xs text-slate-500">Qty:</span>
+                                    <span className="text-xs text-neutral-500 dark:text-neutral-400">Qty:</span>
                                     <input
                                         type="number"
                                         min="0"
                                         step="0.1"
                                         defaultValue={item.quantityAvailable}
                                         onBlur={(e) => handleUpdateQuantity(item._id, e.target.value)}
-                                        className="w-20 px-2.5 py-1 border border-slate-300 rounded-lg text-sm font-semibold text-slate-900 text-center focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                                        className="w-20 px-2.5 py-1 border border-neutral-300 dark:border-darkSurface-border rounded-btn text-sm font-semibold text-neutral-900 dark:text-neutral-100 bg-white dark:bg-darkSurface-card text-center focus:ring-2 focus:ring-primary-600 focus:outline-none"
                                     />
-                                    <span className="text-xs font-medium text-slate-600">{item.unit}</span>
+                                    <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">{item.unit}</span>
                                 </div>
 
                                 <button
                                     onClick={() => handleRemove(item._id)}
-                                    className="p-1.5 bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-700 rounded-lg transition-colors"
+                                    className="p-1.5 bg-neutral-100 dark:bg-darkSurface-card hover:bg-accent-50 dark:hover:bg-accent-950/40 text-neutral-500 dark:text-neutral-400 hover:text-accent-700 dark:hover:text-accent-300 rounded-btn transition-colors border border-neutral-200 dark:border-darkSurface-border"
                                     title="Remove Stock"
                                 >
                                     <Trash2 className="w-4 h-4" />

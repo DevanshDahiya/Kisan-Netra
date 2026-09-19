@@ -1,5 +1,6 @@
 const Dealer = require('../models/Dealer');
 const DealerStock = require('../models/DealerStock');
+const { getTodayDateString } = require('../utils/storeStatus');
 
 // @route GET /api/dealers/nearby?lng=&lat=&productId=&radius=
 // The standout feature: find dealers near a location, optionally filtered to
@@ -28,8 +29,9 @@ const getNearbyDealers = async (req, res, next) => {
         }
 
         // $geoNear must be the first stage in the pipeline, and it requires the
-        // 2dsphere index. It returns a "distance" field (in meters) on each result -
-        // that's the reason to use aggregation here instead of a plain find() + $near.
+        // 2dsphere index.
+        const openOnlyFilter = req.query.openOnly === 'true' ? { isOpenToday: true, lastOpenedDate: getTodayDateString() } : {};
+
         const pipeline = [
             {
                 $geoNear: {
@@ -39,6 +41,7 @@ const getNearbyDealers = async (req, res, next) => {
                     spherical: true,
                     query: {
                         isVerified: true,
+                        ...openOnlyFilter,
                         ...(dealerIdFilter ? { _id: { $in: dealerIdFilter } } : {}),
                     },
                 },
@@ -48,11 +51,16 @@ const getNearbyDealers = async (req, res, next) => {
 
         const dealers = await Dealer.aggregate(pipeline);
 
-        // Attach stock quantity for the filtered product, if applicable
-        const enrichedDealers = dealers.map((d) => ({
-            ...d,
-            stockInfo: quantityByDealer[d._id.toString()] || null,
-        }));
+        const todayDate = getTodayDateString();
+        // Attach stock quantity and compute real-time isOpenToday boolean flag
+        const enrichedDealers = dealers.map((d) => {
+            const isStoreCurrentlyOpen = Boolean(d.isOpenToday && d.lastOpenedDate === todayDate);
+            return {
+                ...d,
+                isOpenToday: isStoreCurrentlyOpen,
+                stockInfo: quantityByDealer[d._id.toString()] || null,
+            };
+        });
 
         res.status(200).json({ count: enrichedDealers.length, dealers: enrichedDealers });
     } catch (err) {
@@ -181,4 +189,75 @@ const verifyDealer = async (req, res, next) => {
     }
 };
 
-module.exports = { createDealer, getDealer, getMyDealerProfile, updateDealer, deleteDealer, getNearbyDealers, verifyDealer };
+// @route PATCH /api/dealers/:id/open-today - dealer only
+const openStoreToday = async (req, res, next) => {
+    try {
+        const dealer = await Dealer.findById(req.params.id);
+        if (!dealer) {
+            return res.status(404).json({ message: 'Dealer not found.' });
+        }
+
+        if (dealer.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'You can only update your own store status.' });
+        }
+
+        dealer.isOpenToday = true;
+        dealer.lastOpenedDate = getTodayDateString();
+        await dealer.save();
+
+        res.status(200).json({ dealer, message: 'Store marked as open for today.' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @route PATCH /api/dealers/:id/close-today - dealer only
+const closeStoreToday = async (req, res, next) => {
+    try {
+        const dealer = await Dealer.findById(req.params.id);
+        if (!dealer) {
+            return res.status(404).json({ message: 'Dealer not found.' });
+        }
+
+        if (dealer.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'You can only update your own store status.' });
+        }
+
+        dealer.isOpenToday = false;
+        await dealer.save();
+
+        res.status(200).json({ dealer, message: 'Store marked as closed for today.' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @route PATCH /api/dealers/:id/unverify - admin only
+const unverifyDealer = async (req, res, next) => {
+    try {
+        const dealer = await Dealer.findByIdAndUpdate(
+            req.params.id,
+            { isVerified: false },
+            { new: true }
+        );
+        if (!dealer) {
+            return res.status(404).json({ message: 'Dealer not found.' });
+        }
+        res.status(200).json({ dealer, message: 'Dealer verification revoked.' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+module.exports = {
+    createDealer,
+    getDealer,
+    getMyDealerProfile,
+    updateDealer,
+    deleteDealer,
+    getNearbyDealers,
+    verifyDealer,
+    unverifyDealer,
+    openStoreToday,
+    closeStoreToday,
+};

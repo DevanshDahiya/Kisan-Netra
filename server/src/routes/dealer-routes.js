@@ -9,6 +9,9 @@ const {
     deleteDealer,
     getNearbyDealers,
     verifyDealer,
+    unverifyDealer,
+    openStoreToday,
+    closeStoreToday,
 } = require('../controllers/dealer-controller');
 
 const { getDealerStock, addStock, updateStock, deleteStock } = require('../controllers/dealerStock-controller');
@@ -24,8 +27,11 @@ router.get('/me', protect, authorize('dealer'), getMyDealerProfile);
 router.get('/nearby', getNearbyDealers);
 
 router.get('/:id', getDealer);
+router.patch('/:id/open-today', protect, authorize('dealer'), openStoreToday);
+router.patch('/:id/close-today', protect, authorize('dealer'), closeStoreToday);
 router.patch('/:id', protect, authorize('dealer'), updateDealer);
 router.patch('/:id/verify', protect, authorize('admin'), verifyDealer);
+router.patch('/:id/unverify', protect, authorize('admin'), unverifyDealer);
 router.delete('/:id', protect, authorize('dealer', 'admin'), deleteDealer);
 
 // Nested stock routes 

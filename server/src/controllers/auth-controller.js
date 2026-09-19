@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { generateToken, sendTokenCookie } = require('../utils/generateToken');
+const { generateToken, sendTokenCookie, clearTokenCookie } = require('../utils/generateToken');
 const { generateOTP, hashOTP, compareOTP, OTP_EXPIRY_MINUTES, MAX_OTP_ATTEMPTS } = require('../utils/otp');
 const { sendOTPEmail } = require('../utils/emailService');
 
@@ -56,12 +56,7 @@ const login = async (req, res, next) => {
 const logout = async (req, res, next) => {
     try {
         // Explicitly clear the token HttpOnly cookie on logout
-        res.cookie('token', '', {
-            httpOnly: true,
-            expires: new Date(0),
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
-        });
+        clearTokenCookie(res);
         res.status(200).json({ message: 'Logged out successfully.' });
     } catch (err) {
         next(err);
@@ -71,6 +66,7 @@ const logout = async (req, res, next) => {
 // @route GET /api/auth/me
 const getMe = async (req, res, next) => {
     try {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         res.status(200).json({ user: req.user });
     } catch (err) {
         next(err);

@@ -42,7 +42,14 @@ const dealerSchema = new mongoose.Schema({
         type: Boolean,
         default: false, // admin approve it after verifying
     },
-
+    isOpenToday: {
+        type: Boolean,
+        default: false,
+    },
+    lastOpenedDate: {
+        type: String, // stored as 'YYYY-MM-DD', compared against today's date string
+        default: null,
+    },
 }, { timestamps: true });
 
 

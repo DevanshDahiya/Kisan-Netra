@@ -62,7 +62,11 @@ async function createVerifiedDealer(point, storeName) {
 
     const dealer = await Dealer.findByIdAndUpdate(
         dealerRes.body.dealer._id,
-        { isVerified: true },
+        {
+            isVerified: true,
+            isOpenToday: true,
+            lastOpenedDate: new Date().toISOString().slice(0, 10),
+        },
         { returnDocument: 'after' }
     );
 
@@ -100,6 +104,23 @@ describe('Nearby dealer geo-search', () => {
 
         const names = res.body.dealers.map((d) => d.storeName);
         expect(names).not.toContain('Unverified Store');
+    });
+
+    test('dealers not opened today do not appear in search results when openOnly is requested', async () => {
+        await createVerifiedDealer(NEARBY_DEALER_POINT, 'Closed Store');
+        const dealer = await Dealer.findOne({ storeName: 'Closed Store' });
+        dealer.isOpenToday = false;
+        await dealer.save();
+
+        const res = await request(app).get('/api/dealers/nearby').query({
+            lng: NEAR_POINT.lng,
+            lat: NEAR_POINT.lat,
+            radius: 20,
+            openOnly: 'true',
+        });
+
+        const names = res.body.dealers.map((d) => d.storeName);
+        expect(names).not.toContain('Closed Store');
     });
 
     test('filters results to only dealers stocking the requested product', async () => {
