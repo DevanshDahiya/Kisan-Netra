@@ -45,6 +45,28 @@ const userSchema = new mongoose.Schema(
             default: 0,
             select: false,
         },
+        // registry claim OTP fields
+        registryClaimOTP: {
+            type: String,
+            select: false,
+        },
+        registryClaimExpires: {
+            type: Date,
+            select: false,
+        },
+        registryClaimAttempts: {
+            type: Number,
+            default: 0,
+            select: false,
+        },
+        registryClaimSentAt: {
+            type: Date,
+            select: false,
+        },
+        registryClaimVerifiedAt: {
+            type: Date,
+            select: false,
+        },
     },
     { timestamps: true }
 );

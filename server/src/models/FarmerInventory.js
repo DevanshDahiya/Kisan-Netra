@@ -55,6 +55,10 @@ const farmerInventorySchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Dealer',
     },
+    farm: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Farm',
+    },
     usageLog: [usageLogSchema],
 } , { timestamps : true}) ;
 

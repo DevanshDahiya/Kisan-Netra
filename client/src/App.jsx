@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContent";
 import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from './components/Navbar';
@@ -12,6 +12,8 @@ import FarmerDashboard from "./pages/FarmerDashboard";
 import SearchDealers from './pages/SearchDealers';
 import ProductCatalog from "./pages/ProductCatalog";
 import AdminPanel from './pages/AdminPanel';
+import Guide from './pages/Guide';
+import AccountSettings from './pages/AccountSettings';
 
 function App() {
   return (
@@ -23,9 +25,18 @@ function App() {
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/guide" element={<Guide />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route
+                  path="/account"
+                  element={
+                    <ProtectedRoute roles={['farmer', 'dealer']}>
+                      <AccountSettings />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/dealers/dashboard"
                   element={
@@ -76,6 +87,10 @@ function App() {
                   <span className="font-display font-semibold text-neutral-900 dark:text-neutral-200 text-sm">Kisan Netra</span>
                   <span className="text-neutral-300 dark:text-neutral-600">•</span>
                   <span>Licensed Agri-Input Tracking & Geo-Verification</span>
+                  <span className="text-neutral-300 dark:text-neutral-600">•</span>
+                  <Link to="/guide" className="hover:text-primary-600 dark:hover:text-primary-400 underline font-medium">
+                    User Guide
+                  </Link>
                 </div>
                 
                 {/* Developer Credits */}

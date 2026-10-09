@@ -10,6 +10,8 @@ const productRoutes = require('./routes/product-routes');
 const inventoryRoutes = require('./routes/inventory-routes');
 const adminRoutes = require('./routes/admin-routes');
 const feedbackRoutes = require('./routes/feedback-routes');
+const farmRoutes = require('./routes/farm-routes');
+const cropRoutes = require('./routes/crop-routes');
 
 const app = express();
 
@@ -33,6 +35,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/farms', farmRoutes);
+app.use('/api/crops', cropRoutes);
 
 // health check 
 app.get('/api/health', (req, res) => {

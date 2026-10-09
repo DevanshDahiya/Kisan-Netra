@@ -85,6 +85,13 @@ export default function Home() {
                                 >
                                     Sign In
                                 </Link>
+                                <Link
+                                    to="/guide"
+                                    className="px-4 py-3 text-neutral-700 dark:text-neutral-300 hover:text-primary-700 dark:hover:text-primary-400 font-medium text-sm flex items-center gap-1.5 transition-colors"
+                                >
+                                    <span>Read Guide</span>
+                                    <ArrowRight className="w-3.5 h-3.5" />
+                                </Link>
                             </>
                         )}
                     </div>

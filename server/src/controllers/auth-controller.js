@@ -1,4 +1,10 @@
 const User = require('../models/User');
+const FarmerInventory = require('../models/FarmerInventory');
+const Farm = require('../models/Farm');
+const Crop = require('../models/Crop');
+const Feedback = require('../models/Feedback');
+const Dealer = require('../models/Dealer');
+const DealerStock = require('../models/DealerStock');
 const { generateToken, sendTokenCookie, clearTokenCookie } = require('../utils/generateToken');
 const { generateOTP, hashOTP, compareOTP, OTP_EXPIRY_MINUTES, MAX_OTP_ATTEMPTS } = require('../utils/Otp');
 const { sendOTPEmail } = require('../utils/EmailService');
@@ -164,4 +170,52 @@ const resetPassword = async (req, res, next) => {
     }
 };
 
-module.exports = { register, login, logout, getMe, forgotPassword, verifyOTP, resetPassword };
+// @route DELETE /api/auth/account
+const deleteAccount = async (req, res, next) => {
+    try {
+        const { password } = req.body;
+
+        if (req.user.role === 'admin') {
+            return res.status(403).json({ message: 'Admin accounts cannot be deleted here.' });
+        }
+
+        if (!password) {
+            return res.status(400).json({ message: 'Password is required to delete your account.' });
+        }
+
+        const user = await User.findById(req.user._id).select('+password');
+        if (!user || !(await user.comparePassword(password))) {
+            return res.status(401).json({ message: 'Invalid password. Account deletion aborted.' });
+        }
+
+        // Delete children FIRST and User LAST
+        if (user.role === 'farmer') {
+            await FarmerInventory.deleteMany({ farmer: user._id });
+            await Crop.deleteMany({ farmer: user._id });
+            await Farm.deleteMany({ farmer: user._id });
+            await Feedback.deleteMany({ user: user._id });
+        } else if (user.role === 'dealer') {
+            const dealer = await Dealer.findOne({ user: user._id });
+            if (dealer) {
+                await DealerStock.deleteMany({ dealer: dealer._id });
+                await FarmerInventory.updateMany(
+                    { purchasedFrom: dealer._id },
+                    { $unset: { purchasedFrom: 1 } }
+                );
+                await dealer.deleteOne();
+            }
+            await Feedback.deleteMany({ user: user._id });
+        }
+
+        await user.deleteOne();
+
+        clearTokenCookie(res);
+
+        res.status(200).json({ message: 'Account and associated data deleted successfully.' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+module.exports = { register, login, logout, getMe, forgotPassword, verifyOTP, resetPassword, deleteAccount };
+

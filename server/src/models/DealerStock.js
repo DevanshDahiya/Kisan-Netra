@@ -21,6 +21,21 @@ const dealerStockSchema = new mongoose.Schema(
             enum: ['liters', 'kg', 'packets'],
             default: 'liters',
         },
+        price: {
+            type: Number,
+            min: [0, 'Price cannot be negative'],
+            max: [1000000, 'Price cannot exceed 1,000,000'],
+            default: null,
+        },
+        priceUpdatedAt: {
+            type: Date,
+            default: null,
+        },
+        minimumStockThreshold: {
+            type: Number,
+            min: [0, 'Threshold cannot be negative'],
+            default: 10,
+        },
 
 
     },

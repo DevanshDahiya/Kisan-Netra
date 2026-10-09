@@ -14,11 +14,23 @@ const sendOTPEmail = async (toEmail, otp) => {
         from: process.env.SMTP_FROM,
         to: toEmail,
         subject: 'kisan Netra - Password Reset OTP',
-        text: `Your OTP for password reset is ${otp}. It expires in 10 minutes.If you did not request this, please ignore this email.`,
+        text: `Your OTP for password reset is ${otp}. It expires in 10 minutes. If you did not request this, please ignore this email.`,
         html: `<p>Your OTP for password reset is <strong>${otp}</strong>.</p><p>It expires in 10 minutes. If you did not request this, please ignore this email.</p>`
     });
 };
-module.exports = { sendOTPEmail };
+
+const sendRegistryClaimEmail = async (toEmail, otp) => {
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to: toEmail,
+        subject: 'Kisan Netra - Licensed Dealer Verification Code',
+        text: `Your verification code to link and verify your licensed dealer store is ${otp}. It expires in 10 minutes. If you did not initiate this, please ignore this email.`,
+        html: `<p>Your verification code to link and verify your licensed dealer store is <strong>${otp}</strong>.</p><p>It expires in 10 minutes. If you did not initiate this, please ignore this email.</p>`
+    });
+};
+
+module.exports = { sendOTPEmail, sendRegistryClaimEmail };
+
 
 
 

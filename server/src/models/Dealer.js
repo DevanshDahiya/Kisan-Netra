@@ -42,6 +42,20 @@ const dealerSchema = new mongoose.Schema({
         type: Boolean,
         default: false, // admin approve it after verifying
     },
+    verificationSource: {
+        type: String,
+        enum: ['registry', 'admin', null],
+        default: null,
+    },
+    verifiedAt: {
+        type: Date,
+        default: null,
+    },
+    registryRecord: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'LicensedDealer',
+        default: null,
+    },
     isOpenToday: {
         type: Boolean,
         default: false,

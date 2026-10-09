@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const {
+    checkRegistryMatch,
+    sendRegistryOTP,
+    verifyRegistryOTP,
     createDealer,
     getDealer,
     getMyDealerProfile,
@@ -14,16 +17,21 @@ const {
     closeStoreToday,
 } = require('../controllers/dealer-controller');
 
-const { getDealerStock, addStock, updateStock, deleteStock } = require('../controllers/dealerStock-controller');
-
+const { getDealerStock, addStock, updateStock, deleteStock, getDealerAnalytics } = require('../controllers/dealerStock-controller');
 
 const { protect, authorize } = require('../middleware/auth-middleware');
+const { authLimiter } = require('../middleware/security-middleware');
 
 router.post('/', protect, authorize('dealer'), createDealer);
 router.get('/me', protect, authorize('dealer'), getMyDealerProfile);
+router.get('/analytics', protect, authorize('dealer'), getDealerAnalytics);
+
+// Registry match & claim OTP endpoints (dealer role only)
+router.get('/registry/match', protect, authorize('dealer'), checkRegistryMatch);
+router.post('/registry/send-otp', protect, authorize('dealer'), authLimiter, sendRegistryOTP);
+router.post('/registry/verify-otp', protect, authorize('dealer'), authLimiter, verifyRegistryOTP);
 
 // /nearby must come before /:id  , otherwise Express treats "nearby" as the :id parameter itself 
-
 router.get('/nearby', getNearbyDealers);
 
 router.get('/:id', getDealer);

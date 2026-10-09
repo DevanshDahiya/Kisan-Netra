@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContent';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
 import FeedbackModal from './FeedbackModal';
-import { Package, Search, Store, ShieldCheck, LogOut, LogIn, UserPlus, Sun, Moon, User, Home, MessageSquare } from 'lucide-react';
+import { Package, Search, Store, ShieldCheck, LogOut, LogIn, UserPlus, Sun, Moon, User, Home, MessageSquare, BookOpen, Settings, ChevronDown } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
 
   const isActive = (path) => location.pathname === path;
 
@@ -45,20 +47,40 @@ export default function Navbar() {
     }
   };
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Close dropdown on route change
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+  }, [location.pathname]);
+
   return (
     <>
       <nav className="sticky top-0 z-40 bg-white/95 dark:bg-darkSurface-surface/95 border-b border-neutral-200 dark:border-darkSurface-border shadow-xs backdrop-blur-md transition-colors duration-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex justify-between items-center">
-          
+
           {/* Brand Logo */}
           <Logo size="md" />
 
           {/* Nav Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
-            {/* Explicit Home Link */}
             <Link to="/" className={linkStyle('/')}>
               <Home className="w-4 h-4 text-primary-600 dark:text-primary-400" />
               <span className="hidden sm:inline">Home</span>
+            </Link>
+
+            <Link to="/guide" className={linkStyle('/guide')}>
+              <BookOpen className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+              <span className="hidden md:inline">Guide</span>
             </Link>
 
             {user ? (
@@ -103,48 +125,85 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setIsFeedbackOpen(true)}
-                  className="px-2.5 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-darkSurface-hover rounded-btn transition-colors flex items-center gap-1.5 border border-neutral-200 dark:border-darkSurface-border"
+                  className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-darkSurface-hover rounded-btn transition-colors"
                   title="Feedback & Support"
                 >
                   <MessageSquare className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-                  <span className="hidden lg:inline">Feedback</span>
                 </button>
 
-                {/* Divider */}
-                <div className="h-5 w-px bg-neutral-200 dark:bg-darkSurface-border mx-1 hidden sm:block"></div>
-                
-                {/* User Info Pill */}
-                <div className="hidden sm:flex items-center gap-2 pl-1">
-                  <span className="text-xs font-medium text-neutral-800 dark:text-neutral-200 max-w-[120px] truncate">
-                    {user.name}
-                  </span>
-                  {getRoleBadge(user.role)}
-                </div>
-
-                {/* Theme Toggle Button */}
+                {/* Theme Toggle */}
                 <button
                   type="button"
                   onClick={toggleTheme}
                   className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-darkSurface-hover rounded-btn transition-colors"
-                  title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                  title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                   aria-label="Toggle theme"
                 >
                   {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-600" />}
                 </button>
 
-                {/* Logout Button */}
-                <button
-                  onClick={logout}
-                  className="px-2.5 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-status-danger hover:bg-accent-50/50 dark:hover:bg-accent-950/30 rounded-btn transition-colors flex items-center gap-1 border border-neutral-200 dark:border-darkSurface-border"
-                  title="Logout"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Logout</span>
-                </button>
+                {/* Divider */}
+                <div className="h-5 w-px bg-neutral-200 dark:bg-darkSurface-border mx-0.5 hidden sm:block"></div>
+
+                {/* User Dropdown */}
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    type="button"
+                    id="user-menu-button"
+                    onClick={() => setIsUserMenuOpen((v) => !v)}
+                    className="flex items-center gap-1.5 pl-1 pr-2 py-1.5 rounded-btn hover:bg-neutral-100 dark:hover:bg-darkSurface-hover transition-colors"
+                    aria-haspopup="true"
+                    aria-expanded={isUserMenuOpen}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/60 flex items-center justify-center border border-primary-200 dark:border-primary-800 flex-shrink-0">
+                      <User className="w-4 h-4 text-primary-700 dark:text-primary-300" />
+                    </div>
+                    <span className="hidden sm:block text-xs font-medium text-neutral-800 dark:text-neutral-200 max-w-[100px] truncate">
+                      {user.name}
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-neutral-500 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isUserMenuOpen && (
+                    <div
+                      role="menu"
+                      aria-labelledby="user-menu-button"
+                      className="absolute right-0 mt-2 w-56 bg-white dark:bg-darkSurface-card border border-neutral-200 dark:border-darkSurface-border rounded-xl shadow-lg py-1 z-50"
+                    >
+                      {/* User info header */}
+                      <div className="px-3.5 py-3 border-b border-neutral-100 dark:border-darkSurface-border">
+                        <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">{user.name}</p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate mt-0.5">{user.email}</p>
+                        <div className="mt-1.5">{getRoleBadge(user.role)}</div>
+                      </div>
+
+                      {/* Account Settings (farmer & dealer only) */}
+                      {(user.role === 'farmer' || user.role === 'dealer') && (
+                        <Link
+                          to="/account"
+                          role="menuitem"
+                          className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-darkSurface-hover hover:text-neutral-900 dark:hover:text-white transition-colors"
+                        >
+                          <Settings className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
+                          Account Settings
+                        </Link>
+                      )}
+
+                      {/* Logout */}
+                      <button
+                        role="menuitem"
+                        onClick={() => { setIsUserMenuOpen(false); logout(); }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors rounded-b-xl"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <div className="flex items-center gap-2">
-                {/* Feedback Button for Guest */}
                 <button
                   type="button"
                   onClick={() => setIsFeedbackOpen(true)}
@@ -154,12 +213,11 @@ export default function Navbar() {
                   <MessageSquare className="w-4 h-4 text-primary-600 dark:text-primary-400" />
                 </button>
 
-                {/* Theme Toggle Button */}
                 <button
                   type="button"
                   onClick={toggleTheme}
                   className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-darkSurface-hover rounded-btn transition-colors mr-1"
-                  title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                  title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                   aria-label="Toggle theme"
                 >
                   {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-600" />}
