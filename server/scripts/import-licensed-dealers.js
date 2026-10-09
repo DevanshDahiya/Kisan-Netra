@@ -2,7 +2,30 @@ const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
 const ExcelJS = require('exceljs');
+const XLSX = require('xlsx');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+/**
+ * Load any spreadsheet into an ExcelJS Workbook.
+ * .xls (legacy binary) is converted via SheetJS -> xlsx buffer first,
+ * since ExcelJS only supports the .xlsx (ZIP-based) format.
+ */
+async function loadWorkbook(filePath) {
+  const workbook = new ExcelJS.Workbook();
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === '.csv') {
+    await workbook.csv.readFile(filePath);
+  } else if (ext === '.xls') {
+    // SheetJS can read legacy .xls binary format
+    const sheetjsBook = XLSX.readFile(filePath);
+    const xlsxBuffer = XLSX.write(sheetjsBook, { type: 'buffer', bookType: 'xlsx' });
+    await workbook.xlsx.load(xlsxBuffer);
+  } else {
+    // .xlsx and anything else: use ExcelJS directly
+    await workbook.xlsx.readFile(filePath);
+  }
+  return workbook;
+}
 
 const LicensedDealer = require('../src/models/LicensedDealer');
 const { normalizeLicense } = require('../src/utils/license-normalizer');
@@ -137,13 +160,7 @@ async function inspectFile(filePath) {
     return;
   }
 
-  const workbook = new ExcelJS.Workbook();
-  const ext = path.extname(filePath).toLowerCase();
-  if (ext === '.csv') {
-    await workbook.csv.readFile(filePath);
-  } else {
-    await workbook.xlsx.readFile(filePath);
-  }
+  const workbook = await loadWorkbook(filePath);
 
   const worksheet = workbook.worksheets[0];
   if (!worksheet) {
@@ -207,13 +224,7 @@ async function runImport() {
   console.log(`Source File: ${targetFile}`);
   console.log(`Mode: ${isDryRun ? 'DRY RUN (No database changes)' : 'LIVE IMPORT'}`);
 
-  const workbook = new ExcelJS.Workbook();
-  const ext = path.extname(targetFile).toLowerCase();
-  if (ext === '.csv') {
-    await workbook.csv.readFile(targetFile);
-  } else {
-    await workbook.xlsx.readFile(targetFile);
-  }
+  const workbook = await loadWorkbook(targetFile);
 
   const worksheet = workbook.worksheets[0];
   if (!worksheet) {
